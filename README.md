@@ -4,9 +4,7 @@ All-in-one solution
 
 ## Build
 ```sh
-docker build -t otp-panel .
-# edit docker-compose.yml
-docker-compose up -d
+go build -o otp-panel *.go
 ```
 
 ## Example call
