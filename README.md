@@ -7,6 +7,11 @@ All-in-one solution
 go build -o otp-panel *.go
 ```
 
+## Run
+```sh
+GIN_MODE=release REDIS_ADDR=<address>:<port> REDIS_PASS=<password> ./otp-panel
+```
+
 ## Example call
 ```sh
 curl -XPOST -H "Content-type: application/json" -d '{
