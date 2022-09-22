@@ -9,7 +9,7 @@ export default {
   data() {
     return {
       socket: io(
-        // replace in dev mode with http://localhost:8080
+        // replace in dev mode port from window.location.port to 8080
         `${window.location.protocol}//${window.location.hostname}:${window.location.port}`,
         {
           withCredentials: false,
@@ -31,11 +31,18 @@ export default {
     this.socket.on('message_update', (data) => {
       this.messages = [JSON.parse(data), ...this.messages]
     })
+
+    setInterval(() => {
+      this.socket.emit('message_stack_req')
+    }, 1000 * 30)
   },
   methods: {
     ellipis: (target, limit) => {
       return target.length > limit ? `${target.substring(0, limit - 3)}...` : target
-    }
+    },
+    isRecent: (date) => {
+      return (new Date().getTime() - new Date(date).getTime()) <= 5000
+    },
   }
 }
 </script>
@@ -47,6 +54,7 @@ export default {
     <Column field="updated" header="Updated" :sortable="true">
       <template #body="slotProps">
         {{new Date(slotProps.data.updated).toLocaleString()}}
+        <Badge v-if="isRecent(slotProps.data.updated)" severity="danger"></Badge>
       </template>
     </Column>
     <Column field="otp" header="OTP">

@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"regexp"
 	"time"
 
@@ -54,4 +55,15 @@ func LRange() (string, error) {
 	json, err := json.Marshal(parsed)
 
 	return string(json), err
+}
+
+// Ltrim performs REDIS LTRIM command against the message stack.
+// Used as a scheduled job to chop the stack to a default length (50)
+func LTrim() {
+	client := RedisCtx.Value("client").(*redis.Client)
+	err := client.LTrim(ctx, "message_stack", 0, 49).Err()
+	fmt.Println("TRim")
+	if err != nil {
+		panic(err)
+	}
 }

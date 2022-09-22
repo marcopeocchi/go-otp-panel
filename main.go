@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 	socketio "github.com/googollee/go-socket.io"
+	"github.com/robfig/cron/v3"
 	"peocchiproject.it/m/api"
 )
 
@@ -83,6 +84,13 @@ func main() {
 	// API route
 	apiRoute := r.Group("/api")
 	api.ApplyMessagesRoute(apiRoute, &RedisCtx)
+
+	// Background scheduler
+	go func() {
+		scheduler := cron.New()
+		scheduler.AddFunc("0 0 * * *", LTrim)
+		scheduler.Run()
+	}()
 
 	// run blocking server
 	r.Run()
