@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"embed"
+	"io/fs"
 	"log"
-	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -14,8 +14,9 @@ import (
 	"peocchiproject.it/m/api"
 )
 
-//go:embed public/*
+//go:embed public
 var vue embed.FS
+var vueFS fs.FS
 
 var ctx = context.Background()
 var RedisCtx = context.Background()
@@ -25,6 +26,7 @@ type redisCtxKey interface{}
 func main() {
 	// :D
 	splash(os.Getenv("PORT"))
+	vueFS, _ = fs.Sub(vue, "public")
 
 	// init Gin router
 	r := gin.Default()
@@ -42,44 +44,41 @@ func main() {
 	defer rdb.Close()
 
 	// init socket io instance
-	io := socketio.NewServer(nil)
+	ws := socketio.NewServer(nil)
 
 	// spawn a goroutine to handle pub-sub messages
 	sub := rdb.Subscribe(ctx, "rt-messages")
 	ch := sub.Channel()
-	go Subscriber(io, ch)
+	go Subscriber(ws, ch)
 
 	// set socket io context to ensure data transfer to client
-	io.OnConnect("/", func(s socketio.Conn) error {
+	ws.OnConnect("/", func(s socketio.Conn) error {
 		s.SetContext("")
 		return nil
 	})
 
-	io.OnEvent("/", "message_stack_req", func(s socketio.Conn) {
+	ws.OnEvent("/", "message_stack_req", func(s socketio.Conn) {
 		res, _ := LRange()
 		s.Emit("message_stack_res", res)
 	})
 
 	// socket io error detection goroutine
 	go func() {
-		if err := io.Serve(); err != nil {
+		if err := ws.Serve(); err != nil {
 			log.Fatalf("[WS] error detected: %s\n", err)
 		}
 	}()
-	defer io.Close()
+	defer ws.Close()
 
 	// Gin router handlers
 	r.Use(CORS("*"))
-	r.Static("/web", "./public")
-	r.Static("/assets", "./public/assets")
 
-	r.Any("/public/*f", func(ctx *gin.Context) {
-		staticServer := http.FileServer(http.FS(vue))
-		staticServer.ServeHTTP(ctx.Writer, ctx.Request)
-	})
+	// ember vue app
+	r.GET("/", staticHandler("/", true))
+	r.GET("/assets", staticHandler("/assets", false))
 
-	r.GET("/socket.io/*any", gin.WrapH(io))
-	r.POST("/socket.io/*any", gin.WrapH(io))
+	r.GET("/socket.io/*any", gin.WrapH(ws))
+	r.POST("/socket.io/*any", gin.WrapH(ws))
 
 	// API route
 	apiRoute := r.Group("/api")
