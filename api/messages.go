@@ -9,17 +9,16 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
+	"github.com/gofrs/uuid"
 	"peocchiproject.it/m/api/dto"
 )
 
 func ApplyMessagesRoute(r *gin.RouterGroup, redisCtx *context.Context) {
-	messagesRoute := r.Group("/api")
-
-	messagesRoute.POST("/publish", PublishMessage(redisCtx))
-	//messagesRoute.POST("/range/:range")
+	r.GET("/range/:range", getRange())
+	r.POST("/publish", publishMessage(redisCtx))
 }
 
-func PublishMessage(redisCtx *context.Context) func(ctx *gin.Context) {
+func publishMessage(redisCtx *context.Context) func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
 		messageReq := dto.MessagePublishRequest{}
 		if err := ctx.Bind(&messageReq); err != nil {
@@ -31,12 +30,14 @@ func PublishMessage(redisCtx *context.Context) func(ctx *gin.Context) {
 
 		detectOTP, _ := regexp.Compile(`[a-z0-9]*\d[a-z0-9]*`)
 		otp := detectOTP.FindString(messageReq.Message)
+		id, _ := uuid.NewV4()
 
 		if len(otp) <= 3 {
 			otp = ""
 		}
 
 		toRedis := map[string]interface{}{
+			"uid":       id.String(),
 			"message":   messageReq.Message,
 			"otp":       otp,
 			"sender":    messageReq.Sender,
@@ -55,6 +56,12 @@ func PublishMessage(redisCtx *context.Context) func(ctx *gin.Context) {
 			return
 		}
 
-		ctx.Status(http.StatusOK)
+		ctx.JSON(http.StatusOK, toRedis)
+	}
+}
+
+func getRange() func(ctx *gin.Context) {
+	return func(ctx *gin.Context) {
+		ctx.Status(http.StatusSeeOther)
 	}
 }

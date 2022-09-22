@@ -22,6 +22,9 @@ var redisCtx = context.Background()
 type redisCtxKey interface{}
 
 func main() {
+	// :D
+	splash(os.Getenv("PORT"))
+
 	// init Gin router
 	r := gin.Default()
 
@@ -77,13 +80,9 @@ func main() {
 	r.GET("/socket.io/*any", gin.WrapH(io))
 	r.POST("/socket.io/*any", gin.WrapH(io))
 
-	r.GET("/ping", func(ctx *gin.Context) {
-		ctx.JSON(http.StatusOK, gin.H{
-			"message": "pong",
-		})
-	})
-
-	r.POST("/api/publish", api.PublishMessage(&redisCtx))
+	// API route
+	apiRoute := r.Group("/api")
+	api.ApplyMessagesRoute(apiRoute, &redisCtx)
 
 	// run blocking server
 	r.Run()

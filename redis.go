@@ -10,6 +10,7 @@ import (
 )
 
 type message struct {
+	Uid       string    `json:"uid"`
 	Message   string    `json:"message"`
 	Sender    string    `json:"sender"`
 	Recipient string    `json:"recipient"`
@@ -32,6 +33,10 @@ func LRange() (string, error) {
 	client := redisCtx.Value("client").(*redis.Client)
 	stack, err := client.LRange(ctx, "message_stack", 0, 49).Result()
 
+	if err != nil {
+		return "", err
+	}
+
 	parsed := []message{}
 
 	_regexp, _ := regexp.Compile(`[a-z0-9]*\d[a-z0-9]*`)
@@ -39,11 +44,14 @@ func LRange() (string, error) {
 	for _, entry := range stack {
 		res := message{}
 		json.Unmarshal([]byte(entry), &res)
+
 		otpMatch := _regexp.FindString(res.Message)
 		res.OTP = otpMatch
+
 		parsed = append(parsed, res)
 	}
 
-	json, _ := json.Marshal(parsed)
+	json, err := json.Marshal(parsed)
+
 	return string(json), err
 }

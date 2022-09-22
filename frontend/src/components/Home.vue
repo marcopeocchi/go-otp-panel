@@ -8,10 +8,13 @@ import Badge from 'primevue/badge';
 export default {
   data() {
     return {
-      socket: io('http://localhost:8080', {
-        withCredentials: false,
-        transports: ['websocket'],
-      }),
+      socket: io(
+        // replace in dev mode with http://localhost:8080
+        `${window.location.protocol}//${window.location.hostname}:${window.location.port}`,
+        {
+          withCredentials: false,
+          transports: ['websocket'],
+        }),
       messages: [],
       expanded: [],
     }
@@ -19,7 +22,6 @@ export default {
   mounted() { },
   created() {
     this.socket.on('connect', () => {
-      console.log('connected')
       this.socket.emit('message_stack_req')
     })
 
@@ -33,15 +35,16 @@ export default {
   },
   methods: {
     ellipis: (target, limit) => {
-      return (target ?? '').length > limit ? `${target.substring(0, limit - 3)}...` : target
+      return target.length > limit ? `${target.substring(0, limit - 3)}...` : target
     }
   }
 }
 </script>
 
 <template>
-  <DataTable :value="messages" :paginator="true" :rows="20" :row-hover="true" v-model:expandedRows="expanded">
-    <Column :expander="true" headerStyle="width: 3rem"></Column>
+  <DataTable :value="messages" :paginator="true" :rows="20" :row-hover="true" v-model:expandedRows="expanded"
+    data-key="uid">
+    <Column :expander="true" headerStyle="width: 3rem"> </Column>
     <Column field="updated" header="Updated" :sortable="true">
       <template #body="slotProps">
         {{new Date(slotProps.data.updated).toLocaleString()}}
