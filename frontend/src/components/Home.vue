@@ -17,6 +17,7 @@ export default {
         }),
       messages: [],
       expanded: [],
+      loading: true,
     }
   },
   created() {
@@ -26,6 +27,7 @@ export default {
 
     this.socket.on('message_stack_res', (data) => {
       this.messages = JSON.parse(data)
+      this.loading = false
     })
 
     this.socket.on('message_update', (data) => {
@@ -49,7 +51,7 @@ export default {
 
 <template>
   <DataTable :value="messages" :paginator="true" :rows="20" :row-hover="true" v-model:expandedRows="expanded"
-    data-key="uid">
+    :loading="loading" data-key="uid">
     <Column :expander="true" headerStyle="width: 3rem"> </Column>
     <Column field="updated" header="Updated" :sortable="true">
       <template #body="slotProps">
