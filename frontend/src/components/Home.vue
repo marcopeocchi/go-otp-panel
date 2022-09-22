@@ -19,7 +19,6 @@ export default {
       expanded: [],
     }
   },
-  mounted() { },
   created() {
     this.socket.on('connect', () => {
       this.socket.emit('message_stack_req')

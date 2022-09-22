@@ -30,7 +30,7 @@ func Subscriber(io *socketio.Server, c <-chan *redis.Message) {
 // lrange performs REDIS LRANGE command against the message stack, parse it to a struct
 // and retrieves OTP from the message, then send the updated struct to the client
 func LRange() (string, error) {
-	client := redisCtx.Value("client").(*redis.Client)
+	client := RedisCtx.Value("client").(*redis.Client)
 	stack, err := client.LRange(ctx, "message_stack", 0, 49).Result()
 
 	if err != nil {

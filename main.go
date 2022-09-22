@@ -17,7 +17,7 @@ import (
 var vue embed.FS
 
 var ctx = context.Background()
-var redisCtx = context.Background()
+var RedisCtx = context.Background()
 
 type redisCtxKey interface{}
 
@@ -36,7 +36,7 @@ func main() {
 	})
 
 	key := redisCtxKey("client")
-	redisCtx = context.WithValue(redisCtx, key, rdb)
+	RedisCtx = context.WithValue(RedisCtx, key, rdb)
 
 	defer rdb.Close()
 
@@ -82,7 +82,7 @@ func main() {
 
 	// API route
 	apiRoute := r.Group("/api")
-	api.ApplyMessagesRoute(apiRoute, &redisCtx)
+	api.ApplyMessagesRoute(apiRoute, &RedisCtx)
 
 	// run blocking server
 	r.Run()
