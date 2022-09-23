@@ -1,6 +1,7 @@
 # OTP-Panel
 
-All-in-one solution
+All-in-one solution.  
+Coupled with its [Android Client](https://github.com/marcopeocchi/otp-panel-android-client).
 
 ![overview](https://i.ibb.co/2qLs169/null-1.png)
 
