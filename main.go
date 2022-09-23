@@ -74,8 +74,8 @@ func main() {
 	r.Use(CORS("*"))
 
 	// ember vue app
-	r.GET("/", staticHandler("/", true))
-	r.GET("/assets", staticHandler("/assets", false))
+	r.GET("/", spaHandler(&vueFS, true))
+	r.GET("/assets", spaHandler(&vueFS, false))
 
 	r.GET("/socket.io/*any", gin.WrapH(ws))
 	r.POST("/socket.io/*any", gin.WrapH(ws))

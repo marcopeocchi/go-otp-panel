@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"io/fs"
 	"mime"
 	"net/http"
 	"path/filepath"
@@ -23,7 +24,7 @@ func splash(port string) {
 	fmt.Printf("> Ready | Listening on port:%s                                   \n\n", port)
 }
 
-func staticHandler(route string, index bool) func(ctx *gin.Context) {
+func spaHandler(fs *fs.FS, index bool) func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
 		path := filepath.Clean(ctx.Request.URL.Path)
 		if index {
@@ -33,9 +34,7 @@ func staticHandler(route string, index bool) func(ctx *gin.Context) {
 		}
 		path = strings.TrimPrefix(path, "/")
 
-		fmt.Println(path)
-
-		file, err := vueFS.Open(path)
+		file, err := (*fs).Open(path)
 		if err != nil {
 			ctx.AbortWithStatus(http.StatusNotFound)
 			return
